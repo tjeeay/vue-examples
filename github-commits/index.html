@@ -1,0 +1,80 @@
+<!DOCTYPE>
+
+<html>
+<head>
+    <title>Github 提交</title>
+    <style>
+        #demo {
+            font-family: 'Helvetica', Arial, sans-serif;
+        }
+        a {
+            text-decoration: none;
+            color: #f66;
+        }
+        li {
+            line-height: 1.5em;
+            margin-bottom: 20px;
+        }
+        .author, .date {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div id="demo">
+        <h2>Latest Vue.js Commits</h2>
+        <template v-for="branch in branchs">
+            <input type="radio" name="branch" :id="branch+$index" :value="branch" v-model="currentBranch" />
+            <label :for="branch+$index" v-text="branch"></label>
+        </template>
+        <p>vuejs/vue@<span v-text="currentBranch"></span></p>
+        <ul v-for="record in commits">
+            <li>
+                <a :href="record.html_url" target="_blank" class="commit">{{record.sha.slice(0, 7)}}</a>
+                - <span class="message">{{record.commit.message | truncate}}</span><br>
+                by <span class="author">{{record.commit.author.name}}</span>
+                at <span class="date">{{record.commit.author.date | formatDate}}</span>
+            </li>
+        </ul>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/vue/1.0.24/vue.js"></script>
+    <script type="text/javascript">
+        var _api = "https://api.github.com/repos/vuejs/vue/commits?per_page=3&sha=";
+        var vm = new Vue({
+            el: '#demo',
+            data: {
+                branchs: ['master', 'dev'],
+                currentBranch: 'master',
+                commits: []
+            },
+            created: function() {
+                this.fetchData();
+            },
+            watch: {
+                currentBranch: 'fetchData'
+            },
+            filters: {
+                truncate: function(v) {
+                    var newline = v.indexOf('\n');
+                    return newline > 0 ? v.slice(0, newline) : v;
+                },
+                formatDate: function(date) {
+                    return date.replace(/T|Z/g, ' ');
+                }
+            },
+            methods: {
+                fetchData: function() {
+                    var self = this;
+                    var xhr = new XMLHttpRequest();
+                    xhr.open('GET', _api + self.currentBranch);
+                    xhr.onload = function() {
+                        self.commits = JSON.parse(xhr.responseText);
+                    };
+                    xhr.send();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
